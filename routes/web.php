@@ -11,7 +11,27 @@
 |
 */
 
-$app->get('user/{$id}', 'UserController@get');
+
+$app->group(['prefix' => 'v1'], function () use ($app) {
+	$app->get('user/{id}', 'UserController@get');
+
+	$app->group(['prefix' => 'items'], function () use ($app) {
+		//Categories
+		$app->group(['prefix' => 'categories'], function () use ($app) {
+			$app->get('/', 'ItemController@getCategories');
+		});
+		//Collections
+		$app->group(['prefix' => 'collections'], function () use ($app) {
+			$app->get('/', 'ItemController@getCollections');
+			$app->get('search/{collection}', 'ItemController@getCollection');
+			$app->get('{collection}', 'ItemController@getCollectionItems');
+		});
+
+		$app->get('{id}', 'ItemController@get');
+	});
+
+	//$app->get('user/{id}', 'SteamController@get');
+});
 
 $app->get('/', function () use ($app) {
     return $app->version();
