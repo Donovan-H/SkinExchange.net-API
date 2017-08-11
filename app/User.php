@@ -18,7 +18,7 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
      * @var array
      */
     protected $fillable = [
-        'username', 'steamid', 'key', 'avatar', 'trade_link', 'inv_updated', 'name', 'email'
+        'username', 'steamid', 'avatar', 'trade_link', 'inv_updated', 'name'
     ];
 
     /**
@@ -27,7 +27,7 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token', 'admin',
+        'password', 'remember_token', 'admin', 'key',  'email'
     ];
 
     public function trades()
