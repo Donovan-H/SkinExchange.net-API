@@ -55,63 +55,62 @@ class ItemController extends Controller
                     $item->image = $v['icon_url'];
 
                     foreach ($v['tags'] as $tag) {
-                        # Weapon Category e.g Shotgun
-                        if ($tag['category_name'] == "Type") {
-                            $type = Item_Type::firstOrCreate(['type' => $tag['name']]);
-                            if ($type->id) {
-                                $type->type_id_pk = $type->id;
-                            }
-                            $item->type_id_fk = $type->type_id_pk;
-                        }
                         
-                        # Base Weapon e.g Nova
-                        if ($tag['category_name'] == "Weapon") {
-                            $weapon = Item_Weapon::firstOrCreate(['weapon' => $tag['name']]);
-                            if ($weapon->id) {
-                                $weapon->weapon_id_pk = $weapon->id;
-                            }
-                            $item->weapon_id_fk = $weapon->weapon_id_pk;
-                        } else {
-                            $item->weapon_id_fk = 1;
+                        switch ($tag['category_name']) {
+                            case 'Type':
+                                # Weapon Category e.g Shotgun
+                                $type = Item_Type::firstOrCreate(['type' => $tag['name']]);
+                                if ($type->id) $type->type_id_pk = $type->id;
+                                $item->type_id_fk = $type->type_id_pk;
+                                break;
+                            case 'Weapon':
+                                # Base Weapon e.g Nova
+                                $weapon = Item_Weapon::firstOrCreate(['weapon' => $tag['name']]);
+                                if ($weapon->id) $weapon->weapon_id_pk = $weapon->id;                            
+                                $item->weapon_id_fk = $weapon->weapon_id_pk;
+                                break;
+                            case 'Collection':
+                                # Weapon Collection e.g The Italy Collection
+                                $collection = Item_Collection::firstOrCreate(['collection' => $tag['name']]);
+                                if ($collection->id) $collection->collection_id_pk = $collection->id;
+                                $item->collection_id_fk = $collection->collection_id_pk;
+                                break;
+                            
+                            case 'Category':
+                                # Weapon Category e.g Statrak
+                                $category = Item_Category::firstOrCreate(['category' => $tag['name']]);
+                                if ($category->id) $category->category_id_pk = $category->id;
+                                $item->category_id_fk = $category->category_id_pk;
+                                break;
+
+                            case 'Quality':
+                                # Rarity e.g Consumer Grade + Color
+                                $quality = Item_Quality::firstOrCreate(['quality' => $tag['name']], ['color' => $tag['color']]);
+                                if ($quality->id) $quality->quality_id_pk = $quality->id;
+                                $item->quality_id_fk = $quality->quality_id_pk;
+                                break;
+
+                            case 'Exterior':
+                                # Weapon Wear
+                                $exterior = Item_Exterior::firstOrCreate(['exterior' => $tag['name']]);
+                                if ($exterior->id) $exterior->exterior_id_pk = $exterior->id;
+                                $item->exterior_id_fk = $exterior->exterior_id_pk;
+                                break;
+                                
+                            default:
+                                # code...
+                                break;
                         }
 
-                        # Weapon Collection e.g The Italy Collection
-                        if ($tag['category_name'] == "Collection") {
-                            $collection = Item_Collection::firstOrCreate(['collection' => $tag['name']]);
-                            if ($collection->id) {
-                                $collection->collection_id_pk = $collection->id;
-                            }
-                            $item->collection_id_fk = $collection->collection_id_pk;
-                        } else {
+                        if (!$item->collection_id_fk) {
                             $item->collection_id_fk = 1;
                         }
 
-                        # Weapon Category e.g Statrak
-                        if ($tag['category_name'] == "Category") {
-                            $category = Item_Category::firstOrCreate(['category' => $tag['name']]);
-                            if ($category->id) {
-                                $category->category_id_pk = $category->id;
-                            }
-                            $item->category_id_fk = $category->category_id_pk;
+                        if (!$item->weapon_id_fk) {
+                            $item->weapon_id_fk = 1;
                         }
 
-                        # Rarity e.g Consumer Grade + Color
-                        if ($tag['category_name'] == "Quality") {
-                            $quality = Item_Quality::firstOrCreate(['quality' => $tag['name']], ['color' => $tag['color']]);
-                            if ($quality->id) {
-                                $quality->quality_id_pk = $quality->id;
-                            }
-                            $item->quality_id_fk = $quality->quality_id_pk;
-                        }
-
-                        # Weapon Wear
-                        if ($tag['category_name'] == "Exterior") {
-                            $exterior = Item_Exterior::firstOrCreate(['exterior' => $tag['name']]);
-                            if ($exterior->id) {
-                                $exterior->exterior_id_pk = $exterior->id;
-                            }
-                            $item->exterior_id_fk = $exterior->exterior_id_pk;
-                        } else {
+                        if (!$item->exterior_id_fk) {
                             $item->exterior_id_fk = 1;
                         }
 
