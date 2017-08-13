@@ -20,6 +20,7 @@ $app->group(['prefix' => 'v1'], function () use ($app) {
 		$app->group(['prefix' => 'categories'], function () use ($app) {
 			$app->get('/', 'ItemController@getCategories');
 		});
+
 		//Collections
 		$app->group(['prefix' => 'collections'], function () use ($app) {
 			$app->get('/', 'ItemController@getCollections');
@@ -32,6 +33,8 @@ $app->group(['prefix' => 'v1'], function () use ($app) {
 
 	//$app->get('user/{id}', 'SteamController@get');
 });
+
+$app->get('test/{steamid}', 'ItemController@create');
 
 $app->get('/', function () use ($app) {
     return $app->version();
