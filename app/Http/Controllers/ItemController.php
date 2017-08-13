@@ -53,6 +53,7 @@ class ItemController extends Controller
                     $item->name = $v['name'];
                     $item->market_name = $v['market_hash_name'];
                     $item->image = $v['icon_url'];
+                    $item->class_id_fpk = $v['classid'];
 
                     foreach ($v['tags'] as $tag) {
                         

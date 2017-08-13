@@ -22,8 +22,10 @@ class Items extends Migration
             $table->integer('quality_id_fk')->unsigned();
             $table->integer('exterior_id_fk')->unsigned();
 
+            $table->bigInteger('class_id_fpk')->unsigned()->index();
+
             $table->string('name', 255);
-            $table->string('market_name', 255);
+            $table->string('market_name', 255)->index();
             $table->string('image', 255);
             $table->timestamps();
         });
