@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Item as Items2;
-use App\Items2 as Items;
+use App\Item as Items;
 
 use App\Item_Category as Item_Category;
 use App\Item_Collection as Item_Collection;
@@ -11,6 +10,8 @@ use App\Item_Exterior as Item_Exterior;
 use App\Item_Quality as Item_Quality;
 use App\Item_Type as Item_Type;
 use App\Item_Weapon as Item_Weapon;
+
+use App\Proxy as Proxy;
 
 class ItemController extends Controller
 {
@@ -24,7 +25,7 @@ class ItemController extends Controller
         //
     }
 
-    public function create($steamid)
+    public function getInventory($steamid)
     {
         
             $response = [
@@ -32,9 +33,29 @@ class ItemController extends Controller
             ];
             $statusCode = 200;
 
+            $proxy = Proxy::where('isActive', '1')->orderBy('updated_at', 'ASC')->first();
+
+            $proxy->isActive = '0';
+            $proxy->save();
 
             $url = sprintf('http://steamcommunity.com/profiles/%s/inventory/json/730/2', $steamid);
-            $content = file_get_contents($url);
+            $auth = base64_encode("{$proxy->username}:{$proxy->password}");
+
+            $proxy->isActive = '1';
+            $proxy->save();
+
+            $proxyConnect = array(
+                'http' => array(
+                    'proxy' => "tcp://{$proxy->ip_address}:{$proxy->port}",
+                    'request_fulluri' => true,
+                    'header' => array("Proxy-Authorization: Basic $auth"),
+                ),
+            );
+
+            $contentStream = stream_context_create($proxyConnect);
+
+            $content = file_get_contents($url, False, $contentStream);
+            //$content = file_get_contents($url);
 
             $json = json_decode($content, true);
 
@@ -48,7 +69,7 @@ class ItemController extends Controller
             foreach($json['rgDescriptions'] as $v) {
                 //print_r($v) ;
                 if ($v['appid'] == 730 && $v['marketable'] == 1) {
-                    $item = new Items2;
+                    $item = new Items;
 
                     $item->name = $v['name'];
                     $item->market_name = $v['market_hash_name'];
@@ -117,7 +138,7 @@ class ItemController extends Controller
 
                     }
                     $end_time = microtime(TRUE);
-                    if (Items2::where('market_name', '=', $item->market_name)->exists()) {
+                    if (Items::where('market_name', '=', $item->market_name)->exists()) {
                         continue;
                     } else {
                         $item->save();
@@ -128,36 +149,6 @@ class ItemController extends Controller
                             "image"             =>  $item->image
                         ];
                     }
-
-                    /*$item_result = Items2::where('market_name', '=', $item->market_name)->first();
-                    if (empty($item_result)) {
-                        $item->save();
-                        $item_result = Items2::where('market_name', '=', $item->market_name)->first();
-
-                    } 
-
-                    $item_result->quantity = 0;
-
-                    foreach ($json['rgInventory'] as $instance) {
-                        if ($instance['classid'] == $v['classid']) {
-                            $item_result->quantity += 1;
-                        }
-                    }
-
-                    $response['inventory'][] = [
-                        "id"                =>  $item_result->id,
-                        "name"              =>  $item_result->name,
-                        "market_name"       =>  $item_result->market_name,
-                        "type"              =>  $item_result->type,
-                        "weapon"            =>  $item_result->weapon,
-                        "collection"        =>  $item_result->collection,
-                        "category"          =>  $item_result->category,
-                        "exterior"          =>  $item_result->exterior,
-                        "quality"           =>  $item_result->quality,
-                        "quality_color"     =>  $item_result->quality_color,
-                        "image"             =>  $item_result->image,
-                        "quantity"          =>  $item_result->quantity,
-                        ];*/
                 }
             }
             $total_time = ($end_time - $start_time);
@@ -165,43 +156,4 @@ class ItemController extends Controller
             return $response;
     }
 
-    public function get($id)
-    {
-        return Items::findorfail($id);
-    }
-
-    public function getCategories()
-    {
-        $categories = Items::select('type')->distinct()->get();
-
-        foreach ($categories as $category) {
-            $output[] = $category["type"];
-        }
-        return array("categories"=>$output);
-    }
-
-    public function getCollections() 
-    {
-        $collections = Items::select('collection')->distinct()->get();
-
-        foreach ($collections as $collection) {
-            if ($collection["collection"] == "") {
-                $collection["collection"] = "None";
-            }
-            $output[] = $collection["collection"];
-        }
-        return array("collections"=>$output);
-    }
-
-    public function getCollection($collection) 
-    {
-        $collection = urldecode($collection);//escape this shit
-        return Items::select('collection')->where('collection','=', "$collection" )->first();
-    }
-
-    public function getCollectionItems($collection)
-    {
-        $collection = urldecode($collection);
-        return Items::where('collection','LIKE', "%$collection%" )->get();
-    }
 }
