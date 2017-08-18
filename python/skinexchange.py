@@ -8,7 +8,7 @@ wait_time = 0
 error_wait_time = 20
 for op in opskins:
     
-    seurl = "http://localhost:8001/v1/inventory/{0}".format(op)#http://steamcommunity.com/id/{0}/inventory/json/730/2/
+    seurl = "http://localhost:8001/api/v1/inventory/{0}".format(op)#http://steamcommunity.com/id/{0}/inventory/json/730/2/
     print("SteamID: " + op)
     print(seurl)
     try:
@@ -21,7 +21,7 @@ for op in opskins:
         print("Waiting {0} seconds...".format(wait_time))
         time.sleep(wait_time)
         successful_runs += 1
-        if wait_time > 30 and successful_runs > 15:
+        if wait_time > 15 and successful_runs > 10:
             print("Clearing wait time.")
             wait_time = 0;
     except:

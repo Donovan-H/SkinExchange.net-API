@@ -37,6 +37,7 @@ class Items extends Migration
 
         Schema::create('item_weapon', function (Blueprint $table) {
             $table->increments('weapon_id_pk');
+            //$table->integer('type_id_fk')->unsigned();//IMPLEMENT
             $table->string('weapon', 128);
         });
 

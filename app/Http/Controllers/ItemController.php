@@ -38,7 +38,6 @@ class ItemController extends Controller
             $proxy->isActive = '0';
             $proxy->save();
 
-            $url = sprintf('http://steamcommunity.com/profiles/%s/inventory/json/730/2', $steamid);
             $auth = base64_encode("{$proxy->username}:{$proxy->password}");
 
             $proxy->isActive = '1';
@@ -55,13 +54,17 @@ class ItemController extends Controller
             $contentStream = stream_context_create($proxyConnect);
 
             $content = file_get_contents($url, False, $contentStream);
-            //$content = file_get_contents($url);
+            $url = sprintf('http://steamcommunity.com/profiles/%s/inventory/json/730/2', $steamid);
+            $content = file_get_contents($url);
 
             $json = json_decode($content, true);
 
+            if ($json["success"] != "true") {
+                return array("success" => "false");
+            }
+
             if (empty($json['rgDescriptions'])) {
-                //throw new Exception('Invalid SteamID.'); Need error thorwing
-                return 0;
+                return array("success" => "false");
             }
 
             //print_r(array_count_values($json['rgInventory']));
@@ -153,7 +156,31 @@ class ItemController extends Controller
             }
             $total_time = ($end_time - $start_time);
             $response["time_elapsed"][] = $total_time;
+            $response["proxy"][] = '';
             return $response;
     }
 
+
+    public function getItem($classid)
+    {
+        return Items::where('class_id_fpk', $classid)->get();
+    }
+
+    public function getCollections()
+    {
+        return Item_Collection::select('collection')->get();
+    }
+
+    public function getCategories()
+    {
+        return Item_Category::select('category')->get();
+    }
+    public function getWeapons()
+    {
+        return Item_Weapon::select('weapon')->get();
+    }
+    public function getTypes()
+    {
+        return Item_Type::select('type')->get();
+    }
 }
