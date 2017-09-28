@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Item as Items;
+use App\Models\CSGO\Item as Items;
 
-use App\Item_Category as Item_Category;
-use App\Item_Collection as Item_Collection;
-use App\Item_Exterior as Item_Exterior;
-use App\Item_Quality as Item_Quality;
-use App\Item_Type as Item_Type;
-use App\Item_Weapon as Item_Weapon;
+use App\Models\CSGO\Item_Category as Item_Category;
+use App\Models\CSGO\Item_Collection as Item_Collection;
+use App\Models\CSGO\Item_Exterior as Item_Exterior;
+use App\Models\CSGO\Item_Quality as Item_Quality;
+use App\Models\CSGO\Item_Type as Item_Type;
+use App\Models\CSGO\Item_Weapon as Item_Weapon;
 
-use App\Proxy as Proxy;
+use App\Models\Proxy as Proxy;
 
 class ItemController extends Controller
 {
