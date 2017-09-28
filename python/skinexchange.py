@@ -8,7 +8,7 @@ wait_time = 0
 error_wait_time = 20
 for op in opskins:
     
-    seurl = "http://localhost:8001/api/v1/inventory/{0}".format(op)#http://steamcommunity.com/id/{0}/inventory/json/730/2/
+    seurl = "http://localhost:8000/api/v1/inventory/578080/{0}".format(op)#http://steamcommunity.com/id/{0}/inventory/json/730/2/
     print("SteamID: " + op)
     print(seurl)
     try:

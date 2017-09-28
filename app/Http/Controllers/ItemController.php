@@ -29,20 +29,10 @@ class ItemController extends Controller
         //
     }
 
-    public function getInventory($appid, $steamid)
+    public function proxyRequest($url)
     {
-        $response = [
-            'inventory' => []
-        ];
-
-        if($appid != CSGO && $appid != PUBG) {
-            return array("success" => "false");
-        }
-
-        $url = sprintf('http://steamcommunity.com/profiles/%s/inventory/json/%d/2', $steamid, $appid);
-
         $proxy = Proxy::where('isActive', '1')->orderBy('updated_at', 'ASC')->first();
-
+        
         $proxy->isActive = '0';
         $proxy->save();
 
@@ -61,10 +51,26 @@ class ItemController extends Controller
 
         $contentStream = stream_context_create($proxyConnect);
         $content = file_get_contents($url, False, $contentStream);
+        return $content;
+    }
+
+    public function getInventory($appid, $steamid)
+    {
+        $response = [
+            'inventory' => []
+        ];
+
+        if($appid != CSGO && $appid != PUBG) {
+            return array("success" => "false");
+        }
+
+        $url = sprintf('http://steamcommunity.com/profiles/%s/inventory/json/%d/2', $steamid, $appid);
+
+        $content = $this->proxyRequest($url);
         //$content = file_get_contents($url);
 
         $json = json_decode($content, true);
-
+        
         if ($json["success"] != "true") {
             return array("success" => "false");
         }
@@ -146,7 +152,6 @@ class ItemController extends Controller
                     }
 
                 }
-                $end_time = microtime(TRUE);
                 if (CSGO_Items::where('market_name', '=', $item->market_name)->exists()) {
                     continue;
                 } else {
@@ -179,14 +184,18 @@ class ItemController extends Controller
                         "market_name"       =>  $item->market_name
                     ];
                 }
-                
-                $end_time = microtime(TRUE);
             }
         }
+        $end_time = microtime(TRUE);
         $total_time = ($end_time - $start_time);
         $response["time_elapsed"][] = $total_time;
         $response["proxy"][] = '';
         return $response;
+    }
+
+    public function getPrice($market_name)
+    {
+        # code...
     }
 
 
