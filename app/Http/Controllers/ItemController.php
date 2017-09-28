@@ -53,9 +53,9 @@ class ItemController extends Controller
 
             $contentStream = stream_context_create($proxyConnect);
 
-            $content = file_get_contents($url, False, $contentStream);
             $url = sprintf('http://steamcommunity.com/profiles/%s/inventory/json/730/2', $steamid);
-            $content = file_get_contents($url);
+            $content = file_get_contents($url, False, $contentStream);
+            //$content = file_get_contents($url);
 
             $json = json_decode($content, true);
 
