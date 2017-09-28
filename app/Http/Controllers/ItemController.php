@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CSGO\Item as Items;
+use App\Models\CSGO\Item as CSGO_Items;
+use App\Models\CSGO\Item_Category as CSGO_Item_Category;
+use App\Models\CSGO\Item_Collection as CSGO_Item_Collection;
+use App\Models\CSGO\Item_Exterior as CSGO_Item_Exterior;
+use App\Models\CSGO\Item_Quality as CSGO_Item_Quality;
+use App\Models\CSGO\Item_Type as CSGO_Item_Type;
+use App\Models\CSGO\Item_Weapon as CSGO_Item_Weapon;
 
-use App\Models\CSGO\Item_Category as Item_Category;
-use App\Models\CSGO\Item_Collection as Item_Collection;
-use App\Models\CSGO\Item_Exterior as Item_Exterior;
-use App\Models\CSGO\Item_Quality as Item_Quality;
-use App\Models\CSGO\Item_Type as Item_Type;
-use App\Models\CSGO\Item_Weapon as Item_Weapon;
+use App\Models\PUBG\Item as PUBG_Items;
 
 use App\Models\Proxy as Proxy;
+
+const CSGO = 730;
+const PUBG = 578080;
 
 class ItemController extends Controller
 {
@@ -25,12 +29,17 @@ class ItemController extends Controller
         //
     }
 
-    public function getInventory($steamid)
-    {        
+    public function getInventory($appid, $steamid)
+    {
         $response = [
             'inventory' => []
         ];
-        $statusCode = 200;
+
+        if($appid != CSGO && $appid != PUBG) {
+            return array("success" => "false");
+        }
+
+        $url = sprintf('http://steamcommunity.com/profiles/%s/inventory/json/%d/2', $steamid, $appid);
 
         $proxy = Proxy::where('isActive', '1')->orderBy('updated_at', 'ASC')->first();
 
@@ -51,8 +60,6 @@ class ItemController extends Controller
         );
 
         $contentStream = stream_context_create($proxyConnect);
-
-        $url = sprintf('http://steamcommunity.com/profiles/%s/inventory/json/730/2', $steamid);
         $content = file_get_contents($url, False, $contentStream);
         //$content = file_get_contents($url);
 
@@ -69,9 +76,9 @@ class ItemController extends Controller
         //print_r(array_count_values($json['rgInventory']));
         $start_time = microtime(TRUE);
         foreach($json['rgDescriptions'] as $v) {
-            //print_r($v) ;
-            if ($v['appid'] == 730 && $v['marketable'] == 1) {
-                $item = new Items;
+
+            if ($v['appid'] == CSGO && $v['marketable'] == 1) {
+                $item = new CSGO_Items;
 
                 $item->name = $v['name'];
                 $item->market_name = $v['market_hash_name'];
@@ -83,40 +90,40 @@ class ItemController extends Controller
                     switch ($tag['category_name']) {
                         case 'Type':
                             # Weapon Category e.g Shotgun
-                            $type = Item_Type::firstOrCreate(['type' => $tag['name']]);
+                            $type = CSGO_Item_Type::firstOrCreate(['type' => $tag['name']]);
                             if ($type->id) $type->type_id_pk = $type->id;
                             $item->type_id_fk = $type->type_id_pk;
                             break;
                         case 'Weapon':
                             # Base Weapon e.g Nova
-                            $weapon = Item_Weapon::firstOrCreate(['weapon' => $tag['name']]);
+                            $weapon = CSGO_Item_Weapon::firstOrCreate(['weapon' => $tag['name']]);
                             if ($weapon->id) $weapon->weapon_id_pk = $weapon->id;                            
                             $item->weapon_id_fk = $weapon->weapon_id_pk;
                             break;
                         case 'Collection':
                             # Weapon Collection e.g The Italy Collection
-                            $collection = Item_Collection::firstOrCreate(['collection' => $tag['name']]);
+                            $collection = CSGO_Item_Collection::firstOrCreate(['collection' => $tag['name']]);
                             if ($collection->id) $collection->collection_id_pk = $collection->id;
                             $item->collection_id_fk = $collection->collection_id_pk;
                             break;
                         
                         case 'Category':
                             # Weapon Category e.g Statrak
-                            $category = Item_Category::firstOrCreate(['category' => $tag['name']]);
+                            $category = CSGO_Item_Category::firstOrCreate(['category' => $tag['name']]);
                             if ($category->id) $category->category_id_pk = $category->id;
                             $item->category_id_fk = $category->category_id_pk;
                             break;
 
                         case 'Quality':
                             # Rarity e.g Consumer Grade + Color
-                            $quality = Item_Quality::firstOrCreate(['quality' => $tag['name']], ['color' => $tag['color']]);
+                            $quality = CSGO_Item_Quality::firstOrCreate(['quality' => $tag['name']], ['color' => $tag['color']]);
                             if ($quality->id) $quality->quality_id_pk = $quality->id;
                             $item->quality_id_fk = $quality->quality_id_pk;
                             break;
 
                         case 'Exterior':
                             # Weapon Wear
-                            $exterior = Item_Exterior::firstOrCreate(['exterior' => $tag['name']]);
+                            $exterior = CSGO_Item_Exterior::firstOrCreate(['exterior' => $tag['name']]);
                             if ($exterior->id) $exterior->exterior_id_pk = $exterior->id;
                             $item->exterior_id_fk = $exterior->exterior_id_pk;
                             break;
@@ -140,7 +147,7 @@ class ItemController extends Controller
 
                 }
                 $end_time = microtime(TRUE);
-                if (Items::where('market_name', '=', $item->market_name)->exists()) {
+                if (CSGO_Items::where('market_name', '=', $item->market_name)->exists()) {
                     continue;
                 } else {
                     $item->save();
@@ -151,6 +158,29 @@ class ItemController extends Controller
                         "image"             =>  $item->image
                     ];
                 }
+            } elseif ($v['appid'] == PUBG && $v['marketable'] == 1) {
+                $item = new PUBG_Items;
+                
+                $item->class_id_fpk = $v['classid'];
+                $item->name = $v['name'];
+                $item->market_name = $v['market_hash_name'];
+                $item->image = $v['icon_url'];
+                $item->image_large = $v['icon_url_large'];
+                $item->name_color = $v['name_color'];
+                $item->background_color = $v['background_color'];
+                $item->type = $v['type'];
+
+                if (PUBG_Items::where('class_id_fpk', '=', $item->class_id_fpk)->exists()) {
+                    continue;
+                } else {
+                    $item->save();
+                    $response['inventory'][] = [
+                        "id"                =>  $item->class_id_fpk,
+                        "market_name"       =>  $item->market_name
+                    ];
+                }
+                
+                $end_time = microtime(TRUE);
             }
         }
         $total_time = ($end_time - $start_time);
@@ -162,24 +192,24 @@ class ItemController extends Controller
 
     public function getItem($classid)
     {
-        return Items::where('class_id_fpk', $classid)->get();
+        return CSGO_Items::where('class_id_fpk', $classid)->get();
     }
 
     public function getCollections()
     {
-        return Item_Collection::select('collection')->get();
+        return CSGO_Item_Collection::select('collection')->get();
     }
 
     public function getCategories()
     {
-        return Item_Category::select('category')->get();
+        return CSGO_Item_Category::select('category')->get();
     }
     public function getWeapons()
     {
-        return Item_Weapon::select('weapon')->get();
+        return CSGO_Item_Weapon::select('weapon')->get();
     }
     public function getTypes()
     {
-        return Item_Type::select('type')->get();
+        return CSGO_Item_Type::select('type')->get();
     }
 }

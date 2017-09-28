@@ -14,9 +14,8 @@
 
 $app->group(['prefix' => 'api'], function () use ($app) {
 	$app->group(['prefix' => 'v1'], function () use ($app) {
-		$app->get('user/{id}', 'UserController@get');
 
-		$app->get('inventory/{steamid}', 'ItemController@getInventory');
+		$app->get('inventory/{appid}/{steamid}', 'ItemController@getInventory');
 
 		$app->group(['prefix' => 'item'], function () use ($app) {
 			$app->get('{itemid}', 'ItemController@getItem');

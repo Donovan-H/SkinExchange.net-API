@@ -13,7 +13,7 @@ class Pubg extends Migration
      */
     public function up()
     {
-        Schema::create('pugb_items', function (Blueprint $table) {
+        Schema::create('pubg_items', function (Blueprint $table) {
             $table->increments('item_id_pk');
             $table->bigInteger('class_id_fpk')->unsigned()->index();
 
