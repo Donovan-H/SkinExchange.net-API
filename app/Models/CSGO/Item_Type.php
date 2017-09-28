@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Item_Type extends Model
 {
-	protected $table = "item_type";
+	protected $table = "csgo_item_type";
 	protected $fillable = ['type'];
 	public $timestamps = false;
 

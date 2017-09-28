@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Item extends Model
 {
-	protected $table = "items";
+	protected $table = "csgo_items";
 	protected $primaryKey = "item_id_pk";
 	protected $fillable = [
         'item_id_pk', 'type_id_fk', 'weapon_id_fk', 'collection_id_fk', 'category_id_fk', 'name', 'market_name', 'image'

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Item_Quality extends Model
 {
-	protected $table = "item_quality";
+	protected $table = "csgo_item_quality";
 	protected $fillable = ['quality', 'color'];
 	
 	public $timestamps = false;

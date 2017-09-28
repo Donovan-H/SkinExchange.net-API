@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Item_Exterior extends Model
 {
-	protected $table = "item_exterior";
+	protected $table = "csgo_item_exterior";
 	protected $fillable = ['exterior'];
 	public $timestamps = false;
 

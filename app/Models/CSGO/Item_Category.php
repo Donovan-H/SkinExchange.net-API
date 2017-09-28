@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Item_Category extends Model
 {
-	protected $table = "item_category";
+	protected $table = "csgo_item_category";
 	protected $fillable = ['category'];
 	public $timestamps = false;
 
