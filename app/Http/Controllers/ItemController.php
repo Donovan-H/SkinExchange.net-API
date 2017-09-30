@@ -163,7 +163,8 @@ class ItemController extends Controller
                         "image"             =>  $item->image
                     ];
                 }
-            } elseif ($v['appid'] == PUBG && $v['marketable'] == 1) {
+            }
+            if ($v['appid'] == PUBG && $v['marketable'] == 1) {
                 $item = new PUBG_Items;
                 
                 $item->class_id_fpk = $v['classid'];
