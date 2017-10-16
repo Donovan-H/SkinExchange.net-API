@@ -63,12 +63,12 @@ class Items extends Migration
         });
 
         Schema::table('csgo_items', function (Blueprint $table) {
-            $table->foreign('type_id_fk')->references('type_id_pk')->on('item_type');
-            $table->foreign('weapon_id_fk')->references('weapon_id_pk')->on('item_weapon');
-            $table->foreign('collection_id_fk')->references('collection_id_pk')->on('item_collection');
-            $table->foreign('category_id_fk')->references('category_id_pk')->on('item_category');
-            $table->foreign('quality_id_fk')->references('quality_id_pk')->on('item_quality');
-            $table->foreign('exterior_id_fk')->references('exterior_id_pk')->on('item_exterior');
+            $table->foreign('type_id_fk')->references('type_id_pk')->on('csgo_item_type');
+            $table->foreign('weapon_id_fk')->references('weapon_id_pk')->on('csgo_item_weapon');
+            $table->foreign('collection_id_fk')->references('collection_id_pk')->on('csgo_item_collection');
+            $table->foreign('category_id_fk')->references('category_id_pk')->on('csgo_item_category');
+            $table->foreign('quality_id_fk')->references('quality_id_pk')->on('csgo_item_quality');
+            $table->foreign('exterior_id_fk')->references('exterior_id_pk')->on('csgo_item_exterior');
         });
     }
 
