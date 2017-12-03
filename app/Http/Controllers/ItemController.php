@@ -38,9 +38,6 @@ class ItemController extends Controller
 
         $auth = base64_encode("{$proxy->username}:{$proxy->password}");
 
-        $proxy->isActive = '1';
-        $proxy->save();
-
         $proxyConnect = array(
             'http' => array(
                 'proxy' => "tcp://{$proxy->ip_address}:{$proxy->port}",
@@ -51,6 +48,10 @@ class ItemController extends Controller
 
         $contentStream = stream_context_create($proxyConnect);
         $content = file_get_contents($url, False, $contentStream);
+
+        $proxy->isActive = '1';
+        $proxy->save();
+
         return $content;
     }
 
@@ -81,15 +82,27 @@ class ItemController extends Controller
 
         //print_r(array_count_values($json['rgInventory']));
         $start_time = microtime(TRUE);
-        foreach($json['rgDescriptions'] as $v) {
+        foreach($json['rgInventory'] as $inv) {
+            $invSlot = array();
+            if($appid == CSGO) {
+                $item = new CSGO_Items;
+            } elseif($appid == PUBG) {
+                $item = new PUBG_Items;
+            } else {
+                return array("success" => "false");
+            }
+            //"id":"7554053113","classid":"310776586","instanceid":"302028390","amount":"1","pos":39
+            //Gets asset ID from inventory then heads straight to pos in description array
+            $inv["id"];
+            $offset = "{$inv['classid']}_{$inv['instanceid']}";
+            $v = $json['rgDescriptions'][$offset];
 
             if ($v['appid'] == CSGO && $v['marketable'] == 1) {
-                $item = new CSGO_Items;
-
                 $item->name = $v['name'];
                 $item->market_name = $v['market_hash_name'];
                 $item->image = $v['icon_url'];
                 $item->class_id_fpk = $v['classid'];
+                $exterior = "";
 
                 foreach ($v['tags'] as $tag) {
                     
@@ -118,6 +131,7 @@ class ItemController extends Controller
                             $category = CSGO_Item_Category::firstOrCreate(['category' => $tag['name']]);
                             if ($category->id) $category->category_id_pk = $category->id;
                             $item->category_id_fk = $category->category_id_pk;
+                            $category = $tag['name'];
                             break;
 
                         case 'Quality':
@@ -125,6 +139,7 @@ class ItemController extends Controller
                             $quality = CSGO_Item_Quality::firstOrCreate(['quality' => $tag['name']], ['color' => $tag['color']]);
                             if ($quality->id) $quality->quality_id_pk = $quality->id;
                             $item->quality_id_fk = $quality->quality_id_pk;
+                            $quality_color = $tag['color'];
                             break;
 
                         case 'Exterior':
@@ -132,6 +147,7 @@ class ItemController extends Controller
                             $exterior = CSGO_Item_Exterior::firstOrCreate(['exterior' => $tag['name']]);
                             if ($exterior->id) $exterior->exterior_id_pk = $exterior->id;
                             $item->exterior_id_fk = $exterior->exterior_id_pk;
+                            $exterior = $tag['name'];
                             break;
                             
                         default:
@@ -152,21 +168,23 @@ class ItemController extends Controller
                     }
 
                 }
-                if (CSGO_Items::where('market_name', '=', $item->market_name)->exists()) {
-                    continue;
-                } else {
+                if (!CSGO_Items::where('market_name', '=', $item->market_name)->exists()) {
                     $item->save();
-                    $response['inventory'][] = [
-                        "id"                =>  $item->id,
-                        "name"              =>  $item->name,
-                        "market_name"       =>  $item->market_name,
-                        "image"             =>  $item->image
-                    ];
                 }
+                $response['inventory'][] = [
+                    "assetid"           =>  $inv["id"],
+                    "instanceid"        =>  $inv["instanceid"],
+                    "classid"           =>  $item->class_id_fpk,
+                    "amount"            =>  $inv["amount"],
+                    "name"              =>  $item->name,
+                    "market_name"       =>  $item->market_name,
+                    "image"             =>  $item->image,
+                    "csgo_category"          =>  $category,
+                    "csgo_exterior"          =>  $exterior,
+                    "csgo_quality_color"     =>  $quality_color
+                ];
             }
             if ($v['appid'] == PUBG && $v['marketable'] == 1) {
-                $item = new PUBG_Items;
-                
                 $item->class_id_fpk = $v['classid'];
                 $item->name = $v['name'];
                 $item->market_name = $v['market_hash_name'];
@@ -176,17 +194,21 @@ class ItemController extends Controller
                 $item->background_color = $v['background_color'];
                 $item->type = $v['type'];
 
-                if (PUBG_Items::where('class_id_fpk', '=', $item->class_id_fpk)->exists()) {
-                    continue;
-                } else {
+                if (!PUBG_Items::where('class_id_fpk', '=', $item->class_id_fpk)->exists()) {
                     $item->save();
-                    $response['inventory'][] = [
-                        "id"                =>  $item->class_id_fpk,
-                        "market_name"       =>  $item->market_name
-                    ];
                 }
+                $response['inventory'][] = [
+                    "assetid"           =>  $inv["id"],
+                    "instanceid"        =>  $inv["instanceid"],
+                    "classid"           =>  $item->class_id_fpk,
+                    "amount"            =>  $inv["amount"],
+                    "name"              =>  $item->name,
+                    "market_name"       =>  $item->market_name,
+                    "image"             =>  $item->image
+                ];
             }
         }
+       
         $end_time = microtime(TRUE);
         $total_time = ($end_time - $start_time);
         $response["time_elapsed"][] = $total_time;
