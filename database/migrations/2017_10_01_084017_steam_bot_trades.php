@@ -15,7 +15,7 @@ class SteamBotTrades extends Migration
     {
         Schema::create('steam_bot_trades', function (Blueprint $table) {
             $table->increments('id');
-            $table->bigInteger('partnerSteamId')->unsigned()->index();
+            $table->bigInteger('partnerAccountId')->unsigned()->index();
             $table->string('accessToken', 32);
             $table->string('tradeIdentifier', 32)->unique();
             $table->integer('status');
