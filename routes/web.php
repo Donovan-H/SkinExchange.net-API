@@ -11,27 +11,23 @@
 |
 */
 
+$app->group(['prefix' => 'v1'], function () use ($app) {
 
-$app->group(['prefix' => 'api'], function () use ($app) {
-	$app->group(['prefix' => 'v1'], function () use ($app) {
+	$app->get('inventory/{appid}/{steamid}', 'ItemController@getInventory');
 
-		$app->get('inventory/{appid}/{steamid}', 'ItemController@getInventory');
-
-		$app->group(['prefix' => 'item'], function () use ($app) {
-			$app->get('{itemid}', 'ItemController@getItem');
-		});
-
-		
-		$app->get('collections', 'ItemController@getCollections');
-		$app->get('categories', 'ItemController@getCategories');
-		$app->get('weapons', 'ItemController@getWeapons');
-		$app->get('types', 'ItemController@getTypes');
-		
-
-		//$app->get('user/{id}', 'SteamController@get');
+	$app->group(['prefix' => 'item'], function () use ($app) {
+		$app->get('{itemid}', 'ItemController@getItem');
 	});
-});
 
+	
+	$app->get('collections', 'ItemController@getCollections');
+	$app->get('categories', 'ItemController@getCategories');
+	$app->get('weapons', 'ItemController@getWeapons');
+	$app->get('types', 'ItemController@getTypes');
+	
+
+	//$app->get('user/{id}', 'SteamController@get');
+});
 
 $app->get('/', function () use ($app) {
     return $app->version();
