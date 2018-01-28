@@ -65,25 +65,24 @@ class ItemController extends Controller
             return array("success" => "false");
         }
 
-        $url = sprintf('http://steamcommunity.com/profiles/%s/inventory/json/%d/2', $steamid, $appid);
+        $url = sprintf('http://steamcommunity.com/inventory/%s/%d/2?l=english&count=5000', $steamid, $appid);
 
         $content = $this->proxyRequest($url);
         //$content = file_get_contents($url);
 
         $json = json_decode($content, true);
         
-        if ($json["success"] != "true") {
+        if ($json["success"] != true) {
             return array("success" => "false");
         }
 
-        if (empty($json['rgDescriptions'])) {
+        if (empty($json['descriptions'])) {
             return array("success" => "false");
         }
 
         //print_r(array_count_values($json['rgInventory']));
         $start_time = microtime(TRUE);
-        foreach($json['rgInventory'] as $inv) {
-            $invSlot = array();
+        foreach($json['descriptions'] as $v) {
             if($appid == CSGO) {
                 $item = new CSGO_Items;
             } elseif($appid == PUBG) {
@@ -93,50 +92,47 @@ class ItemController extends Controller
             }
             //"id":"7554053113","classid":"310776586","instanceid":"302028390","amount":"1","pos":39
             //Gets asset ID from inventory then heads straight to pos in description array
-            $inv["id"];
-            $offset = "{$inv['classid']}_{$inv['instanceid']}";
-            $v = $json['rgDescriptions'][$offset];
-
-            if ($v['appid'] == CSGO && $v['marketable'] == 1) {
+            if ($v['appid'] == CSGO && $v['marketable'] == 1 && $v['tradable'] == 1) {
                 $item->name = $v['name'];
                 $item->market_name = $v['market_hash_name'];
                 $item->image = $v['icon_url'];
                 $item->class_id_fpk = $v['classid'];
                 $exterior = "";
+                $instanceid = $v['instanceid'];
 
                 foreach ($v['tags'] as $tag) {
                     
-                    switch ($tag['category_name']) {
+                    switch ($tag['localized_category_name']) {
                         case 'Type':
                             # Weapon Category e.g Shotgun
-                            $type = CSGO_Item_Type::firstOrCreate(['type' => $tag['name']]);
+                            $type = CSGO_Item_Type::firstOrCreate(['type' => $tag['localized_tag_name']]);
                             if ($type->id) $type->type_id_pk = $type->id;
                             $item->type_id_fk = $type->type_id_pk;
                             break;
                         case 'Weapon':
                             # Base Weapon e.g Nova
-                            $weapon = CSGO_Item_Weapon::firstOrCreate(['weapon' => $tag['name']]);
+                            $weapon = CSGO_Item_Weapon::firstOrCreate(['weapon' => $tag['localized_tag_name']]);
                             if ($weapon->id) $weapon->weapon_id_pk = $weapon->id;                            
                             $item->weapon_id_fk = $weapon->weapon_id_pk;
                             break;
                         case 'Collection':
                             # Weapon Collection e.g The Italy Collection
-                            $collection = CSGO_Item_Collection::firstOrCreate(['collection' => $tag['name']]);
+                            $collection = CSGO_Item_Collection::firstOrCreate(['collection' => $tag['localized_tag_name']]);
                             if ($collection->id) $collection->collection_id_pk = $collection->id;
                             $item->collection_id_fk = $collection->collection_id_pk;
                             break;
                         
                         case 'Category':
                             # Weapon Category e.g Statrak
-                            $category = CSGO_Item_Category::firstOrCreate(['category' => $tag['name']]);
+                            $category = CSGO_Item_Category::firstOrCreate(['category' => $tag['localized_tag_name']]);
                             if ($category->id) $category->category_id_pk = $category->id;
                             $item->category_id_fk = $category->category_id_pk;
-                            $category = $tag['name'];
+                            $category = $tag['localized_tag_name'];
                             break;
 
                         case 'Quality':
                             # Rarity e.g Consumer Grade + Color
-                            $quality = CSGO_Item_Quality::firstOrCreate(['quality' => $tag['name']], ['color' => $tag['color']]);
+                            $quality = CSGO_Item_Quality::firstOrCreate(['quality' => $tag['localized_tag_name']], ['color' => $tag['color']]);
                             if ($quality->id) $quality->quality_id_pk = $quality->id;
                             $item->quality_id_fk = $quality->quality_id_pk;
                             $quality_color = $tag['color'];
@@ -144,10 +140,10 @@ class ItemController extends Controller
 
                         case 'Exterior':
                             # Weapon Wear
-                            $exterior = CSGO_Item_Exterior::firstOrCreate(['exterior' => $tag['name']]);
+                            $exterior = CSGO_Item_Exterior::firstOrCreate(['exterior' => $tag['localized_tag_name']]);
                             if ($exterior->id) $exterior->exterior_id_pk = $exterior->id;
                             $item->exterior_id_fk = $exterior->exterior_id_pk;
-                            $exterior = $tag['name'];
+                            $exterior = $tag['localized_tag_name'];
                             break;
                             
                         default:
@@ -172,10 +168,8 @@ class ItemController extends Controller
                     $item->save();
                 }
                 $response['inventory'][] = [
-                    "assetid"           =>  $inv["id"],
-                    "instanceid"        =>  $inv["instanceid"],
+                    "instanceid"        =>  $v["instanceid"],
                     "classid"           =>  $item->class_id_fpk,
-                    "amount"            =>  $inv["amount"],
                     "name"              =>  $item->name,
                     "market_name"       =>  $item->market_name,
                     "image"             =>  $item->image,
