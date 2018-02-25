@@ -82,7 +82,7 @@ class ItemController extends Controller
 
         //print_r(array_count_values($json['rgInventory']));
         $start_time = microtime(TRUE);
-        foreach($json['descriptions'] as $v) {
+        foreach($json['descriptions'] as $index => $v) {
             if($appid == CSGO) {
                 $item = new CSGO_Items;
             } elseif($appid == PUBG) {
@@ -168,6 +168,8 @@ class ItemController extends Controller
                     $item->save();
                 }
                 $response['inventory'][] = [
+                    "appid"           =>  $json["assets"][$index]['appid'],
+                    "assetid"           =>  $json["assets"][$index]['assetid'],
                     "instanceid"        =>  $v["instanceid"],
                     "classid"           =>  $item->class_id_fpk,
                     "name"              =>  $item->name,
